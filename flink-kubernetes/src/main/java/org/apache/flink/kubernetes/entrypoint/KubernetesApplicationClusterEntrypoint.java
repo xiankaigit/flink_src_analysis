@@ -43,6 +43,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An {@link ApplicationClusterEntryPoint} for Kubernetes.
@@ -63,6 +64,13 @@ public final class KubernetesApplicationClusterEntrypoint extends ApplicationClu
 		String simpleName =className.substring(idx);
 		System.out.println(simpleName + " commond line is "+arg_param);
 		LOG.info(simpleName+" commond line is "+arg_param);
+		Map<String, String> env = System.getenv();
+
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
 		// startup checks and logging
 		EnvironmentInformation.logEnvironmentInfo(LOG, KubernetesApplicationClusterEntrypoint.class.getSimpleName(), args);
 		SignalHandler.register(LOG);

@@ -40,6 +40,7 @@ import org.apache.flink.runtime.util.JvmShutdownSafeguard;
 import org.apache.flink.runtime.util.SignalHandler;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -97,6 +98,12 @@ public class MesosJobClusterEntrypoint extends JobClusterEntrypoint {
 		String simpleName =className.substring(idx);
 		System.out.println(simpleName + " commond line is "+arg_param);
 		LOG.info(simpleName+" commond line is "+arg_param);
+		Map<String, String> env = System.getenv();
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
 		// startup checks and logging
 		EnvironmentInformation.logEnvironmentInfo(LOG, MesosJobClusterEntrypoint.class.getSimpleName(), args);
 		SignalHandler.register(LOG);

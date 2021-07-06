@@ -27,6 +27,8 @@ import org.apache.flink.runtime.util.EnvironmentInformation;
 import org.apache.flink.runtime.util.JvmShutdownSafeguard;
 import org.apache.flink.runtime.util.SignalHandler;
 
+import java.util.Map;
+
 /**
  * Entry point for the standalone session cluster.
  */
@@ -48,6 +50,12 @@ public class StandaloneSessionClusterEntrypoint extends SessionClusterEntrypoint
 		String simpleName =className.substring(idx);
 		System.out.println(simpleName + " commond line is "+arg_param);
 		LOG.info(simpleName+" commond line is "+arg_param);
+		Map<String, String> env = System.getenv();
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
 		// startup checks and logging
 		EnvironmentInformation.logEnvironmentInfo(LOG, StandaloneSessionClusterEntrypoint.class.getSimpleName(), args);
 		SignalHandler.register(LOG);

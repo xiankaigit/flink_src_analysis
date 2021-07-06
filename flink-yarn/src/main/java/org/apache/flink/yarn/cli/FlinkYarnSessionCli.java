@@ -712,8 +712,22 @@ public class FlinkYarnSessionCli extends AbstractYarnCli {
 	}
 
 	public static void main(final String[] args) {
-		final String configurationDirectory = CliFrontend.getConfigurationDirectoryFromEnv();
 
+		String arg_param= StringUtils.join(args, ",");
+		String className = Thread.currentThread().getStackTrace()[1].getClassName();
+		int idx = className.lastIndexOf(".")+1;
+		String simpleName =className.substring(idx);
+		System.out.println(simpleName + " commond line is "+arg_param);
+		LOG.info(simpleName+" commond line is "+arg_param);
+
+		Map<String, String> env = System.getenv();
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
+
+		final String configurationDirectory = CliFrontend.getConfigurationDirectoryFromEnv();
 		final Configuration flinkConfiguration = GlobalConfiguration.loadConfiguration();
 
 		int retCode;

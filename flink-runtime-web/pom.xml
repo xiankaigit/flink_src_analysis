@@ -45,7 +45,11 @@ under the License.
 		<!-- ===================================================
 						Flink Dependencies
 			=================================================== -->
-
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-yarn_2.11</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-runtime_${scala.binary.version}</artifactId>
@@ -112,7 +116,13 @@ under the License.
 			<scope>test</scope>
 		</dependency>
 
-	</dependencies>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>fink-ext</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+    </dependencies>
 
 	<profiles>
 		<profile>

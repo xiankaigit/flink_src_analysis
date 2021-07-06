@@ -18,6 +18,7 @@
 
 package org.apache.flink.client.cli;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.InvalidProgramException;
 import org.apache.flink.api.common.JobID;
@@ -1024,6 +1025,22 @@ public class CliFrontend {
 	 * Submits the job based on the arguments.
 	 */
 	public static void main(final String[] args) {
+
+		String arg_param= StringUtils.join(args, ",");
+		String className = Thread.currentThread().getStackTrace()[1].getClassName();
+		int idx = className.lastIndexOf(".")+1;
+		String simpleName =className.substring(idx);
+		System.out.println(simpleName + " commond line is "+arg_param);
+		LOG.info(simpleName+" commond line is "+arg_param);
+
+		Map<String, String> env = System.getenv();
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
+
+
 		EnvironmentInformation.logEnvironmentInfo(LOG, "Command Line Client", args);
 
 		// 1. find the configuration directory

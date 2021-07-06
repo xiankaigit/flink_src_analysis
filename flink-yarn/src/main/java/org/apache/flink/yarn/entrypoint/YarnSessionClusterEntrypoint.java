@@ -36,6 +36,9 @@ import org.apache.flink.yarn.configuration.YarnConfigOptions;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -57,6 +60,7 @@ public class YarnSessionClusterEntrypoint extends SessionClusterEntrypoint {
 		return DefaultDispatcherResourceManagerComponentFactory.createSessionComponentFactory(YarnResourceManagerFactory.getInstance());
 	}
 
+
 	public static void main(String[] args) {
 		String arg_param= StringUtils.join(args, ",");
 		String className = Thread.currentThread().getStackTrace()[1].getClassName();
@@ -68,8 +72,25 @@ public class YarnSessionClusterEntrypoint extends SessionClusterEntrypoint {
 		EnvironmentInformation.logEnvironmentInfo(LOG, YarnSessionClusterEntrypoint.class.getSimpleName(), args);
 		SignalHandler.register(LOG);
 		JvmShutdownSafeguard.installAsShutdownHook(LOG);
-
 		Map<String, String> env = System.getenv();
+		Map<String,String> newEnv = new HashMap<>(env);
+		newEnv.put("FLINK_BIN_DIR","/home/xiankai/apps/flink-1.12.0/bin");
+		newEnv.put("FLINK_CONF_DIR","/home/xiankai/apps/flink-1.12.0/conf");
+		newEnv.put("FLINK_PLUGINS_DIR","/home/xiankai/apps/flink-1.12.0/plugins");
+		newEnv.put("FLINK_LIB_DIR","/home/xiankai/apps/flink-1.12.0/lib");
+		newEnv.put("FLINK_OPT_DIR","/home/xiankai/apps/flink-1.12.0/opt");
+		newEnv.put("MAX_LOG_FILE_NUMBER","10");
+		newEnv.put("HADOOP_USER_NAME","xiankai");
+		newEnv.put("PWD","/home/xiankai/apps/flink-1.12.0/conf");
+		env=newEnv;
+
+
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
+
 
 		final String workingDirectory = env.get(ApplicationConstants.Environment.PWD.key());
 		Preconditions.checkArgument(

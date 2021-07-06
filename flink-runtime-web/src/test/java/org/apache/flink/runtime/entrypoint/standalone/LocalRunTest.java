@@ -1,4 +1,4 @@
-package org.apache.flink.runtime;
+package org.apache.flink.runtime.entrypoint.standalone;
 
 import org.apache.flink.runtime.entrypoint.StandaloneSessionClusterEntrypoint;
 import org.apache.flink.runtime.taskexecutor.TaskManagerRunner;

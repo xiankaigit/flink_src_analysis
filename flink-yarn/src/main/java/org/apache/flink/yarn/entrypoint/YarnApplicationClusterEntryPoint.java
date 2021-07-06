@@ -79,7 +79,11 @@ public final class YarnApplicationClusterEntryPoint extends ApplicationClusterEn
 		JvmShutdownSafeguard.installAsShutdownHook(LOG);
 
 		Map<String, String> env = System.getenv();
-
+		LOG.info("------------------ {} show env begin------------------",simpleName);
+		env.forEach((k,v)->{
+			LOG.info("{} ==== {}",k,v);
+		});
+		LOG.info("------------------ {} show env end------------------",simpleName);
 		final String workingDirectory = env.get(ApplicationConstants.Environment.PWD.key());
 		Preconditions.checkArgument(
 				workingDirectory != null,
