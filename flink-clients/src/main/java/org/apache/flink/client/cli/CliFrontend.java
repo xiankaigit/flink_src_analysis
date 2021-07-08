@@ -230,13 +230,14 @@ public class CliFrontend {
 
 		final ProgramOptions programOptions = ProgramOptions.create(commandLine);
 
+		//命令行制定的用户jar包
 		final List<URL> jobJars = getJobJarAndDependencies(programOptions);
 
 		final Configuration effectiveConfiguration = getEffectiveConfiguration(
 				activeCommandLine, commandLine, programOptions, jobJars);
 
 		LOG.debug("Effective executor configuration: {}", effectiveConfiguration);
-
+        //用户入口信息（main方法以及对应jar包等信息）
 		final PackagedProgram program = getPackagedProgram(programOptions, effectiveConfiguration);
 
 		try {
@@ -1043,10 +1044,10 @@ public class CliFrontend {
 
 		EnvironmentInformation.logEnvironmentInfo(LOG, "Command Line Client", args);
 
-		// 1. find the configuration directory
+		// 1. find the configuration directory,flink安装路径下的conf目录
 		final String configurationDirectory = getConfigurationDirectoryFromEnv();
 
-		// 2. load the global configuration
+		// 2. load the global configuration，价值flink-conf.yml文件
 		final Configuration configuration = GlobalConfiguration.loadConfiguration(configurationDirectory);
 
 		// 3. load the custom command lines

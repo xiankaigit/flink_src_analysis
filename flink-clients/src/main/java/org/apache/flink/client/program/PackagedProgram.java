@@ -290,6 +290,7 @@ public class PackagedProgram {
 		return Modifier.isStatic(mainMethod.getModifiers()) && Modifier.isPublic(mainMethod.getModifiers());
 	}
 
+	//通过反射执行执行用户提交jar包的main方法
 	private static void callMainMethod(Class<?> entryClass, String[] args) throws ProgramInvocationException {
 		Method mainMethod;
 		if (!Modifier.isPublic(entryClass.getModifiers())) {

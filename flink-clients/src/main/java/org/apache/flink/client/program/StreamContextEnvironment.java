@@ -149,16 +149,19 @@ public class StreamContextEnvironment extends StreamExecutionEnvironment {
 			final ClassLoader userCodeClassLoader,
 			final boolean enforceSingleJobExecution,
 			final boolean suppressSysout) {
-		StreamExecutionEnvironmentFactory factory = conf -> {
-			Configuration mergedConfiguration = new Configuration();
-			mergedConfiguration.addAll(configuration);
-			mergedConfiguration.addAll(conf);
-			return new StreamContextEnvironment(
-				executorServiceLoader,
-				mergedConfiguration,
-				userCodeClassLoader,
-				enforceSingleJobExecution,
-				suppressSysout);
+		StreamExecutionEnvironmentFactory factory = new StreamExecutionEnvironmentFactory() {
+			@Override
+			public StreamExecutionEnvironment createExecutionEnvironment(Configuration conf) {
+				Configuration mergedConfiguration = new Configuration();
+				mergedConfiguration.addAll(configuration);
+				mergedConfiguration.addAll(conf);
+				return new StreamContextEnvironment(
+						executorServiceLoader,
+						mergedConfiguration,
+						userCodeClassLoader,
+						enforceSingleJobExecution,
+						suppressSysout);
+			}
 		};
 		initializeContextEnvironment(factory);
 	}

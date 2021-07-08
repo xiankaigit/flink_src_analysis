@@ -150,12 +150,17 @@ public class ContextEnvironment extends ExecutionEnvironment {
 			final ClassLoader userCodeClassLoader,
 			final boolean enforceSingleJobExecution,
 			final boolean suppressSysout) {
-		ExecutionEnvironmentFactory factory = () -> new ContextEnvironment(
-			executorServiceLoader,
-			configuration,
-			userCodeClassLoader,
-			enforceSingleJobExecution,
-			suppressSysout);
+		ExecutionEnvironmentFactory factory = new ExecutionEnvironmentFactory() {
+			@Override
+			public ExecutionEnvironment createExecutionEnvironment() {
+				return new ContextEnvironment(
+						executorServiceLoader,
+						configuration,
+						userCodeClassLoader,
+						enforceSingleJobExecution,
+						suppressSysout);
+			}
+		};
 		initializeContextEnvironment(factory);
 	}
 
