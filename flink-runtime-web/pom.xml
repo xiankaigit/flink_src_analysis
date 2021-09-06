@@ -272,6 +272,8 @@ under the License.
 						</goals>
 						<configuration>
 							<nodeVersion>v10.9.0</nodeVersion>
+							<!--nodeDownloadRoot>https://npm.taobao.org/mirrors/node/</nodeDownloadRoot>-->
+							<!--<npmDownloadRoot>https://registry.npm.taobao.org/npm/-/</npmDownloadRoot>-->
 						</configuration>
 					</execution>
 					<execution>
@@ -284,6 +286,7 @@ under the License.
 							<environmentVariables>
 								<HUSKY_SKIP_INSTALL>true</HUSKY_SKIP_INSTALL>
 							</environmentVariables>
+							<!--npmRegistryURL>https://registry.npm.taobao.org/</npmRegistryURL>-->
 						</configuration>
 					</execution>
 					<execution>

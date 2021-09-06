@@ -123,27 +123,33 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 	@GuardedBy("lock")
 	private DispatcherResourceManagerComponent clusterComponent;
 
+	//跟踪所有已经注册的Metric
 	@GuardedBy("lock")
 	private MetricRegistryImpl metricRegistry;
 
 	@GuardedBy("lock")
 	private ProcessMetricGroup processMetricGroup;
 
+	//高可用相关的服务，主要实现分布式计算和leader选举
 	@GuardedBy("lock")
 	private HighAvailabilityServices haServices;
 
+	//服务创建与任务相关的存储目录结构，用于存储用户上传的jar包等
 	@GuardedBy("lock")
 	private BlobServer blobServer;
 
+	//用户心跳检测的服务
 	@GuardedBy("lock")
 	private HeartbeatServices heartbeatServices;
 
+	//基于akka的rpc通信服务，用于集群间通信（JM/TM等之间的通信，不涉及JOB数据交换，Job上下游任务task的数据交换是tm中通过netty实现的）
 	@GuardedBy("lock")
 	private RpcService commonRpcService;
 
 	@GuardedBy("lock")
 	private ExecutorService ioExecutor;
 
+	//存储序列化后的EexcutionGraph
 	private ArchivedExecutionGraphStore archivedExecutionGraphStore;
 
 	private final Thread shutDownHook;
@@ -164,11 +170,14 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
 		try {
 			replaceGracefulExitWithHaltIfConfigured(configuration);
+			//加载flink安装路径下面的plugins目录下的jar包，创建插件管理器,这些插件是单独的类加载器加载的
 			PluginManager pluginManager = PluginUtils.createPluginManagerFromRootFolder(configuration);
+			//初始化文件系统
 			configureFileSystems(configuration, pluginManager);
-
+			//与安全配置相关的上下文
 			SecurityContext securityContext = installSecurityContext(configuration);
 
+			//启动JM
 			securityContext.runSecured((Callable<Void>) () -> {
 				runCluster(configuration, pluginManager);
 
@@ -208,7 +217,7 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
 	private void runCluster(Configuration configuration, PluginManager pluginManager) throws Exception {
 		synchronized (lock) {
-
+            //初始化jm中的相关服务：如commonRpcService等，这些服务是ClusterEntrypoint的成员变量
 			initializeServices(configuration, pluginManager);
 
 			// write host information into configuration
@@ -217,6 +226,10 @@ public abstract class ClusterEntrypoint implements AutoCloseableAsync, FatalErro
 
 			final DispatcherResourceManagerComponentFactory dispatcherResourceManagerComponentFactory = createDispatcherResourceManagerComponentFactory(configuration);
 
+			//创建dispatcherResourceManagerComponent，包含三大组件
+			// Dispatcher: 负责用于接收作业提交，持久化它们，生成要执行的作业管理器任务，并在主任务失败时恢复它们。此外,它知道关于Flink会话集群的状态。
+			// ResourceManager:负责资源的分配和记帐。registerJobManager(JobMasterId, ResourceID, String, JobID, Time)负责注册jobmaster, requestSlot(JobMasterId, SlotRequest, Time)从资源管理器请求一个槽
+			// WebMonitorEndpoint:服务于web前端Rest调用的Rest端点
 			clusterComponent = dispatcherResourceManagerComponentFactory.create(
 				configuration,
 				ioExecutor,

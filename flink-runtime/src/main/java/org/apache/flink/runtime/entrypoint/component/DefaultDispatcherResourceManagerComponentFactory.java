@@ -118,8 +118,9 @@ public class DefaultDispatcherResourceManagerComponentFactory implements Dispatc
 		DispatcherRunner dispatcherRunner = null;
 
 		try {
+			//用于获取dispatcher的leader的服务
 			dispatcherLeaderRetrievalService = highAvailabilityServices.getDispatcherLeaderRetriever();
-
+			//用于获取resouceManager的leader的服务
 			resourceManagerRetrievalService = highAvailabilityServices.getResourceManagerLeaderRetriever();
 
 			final LeaderGatewayRetriever<DispatcherGateway> dispatcherGatewayRetriever = new RpcGatewayRetriever<>(
@@ -163,6 +164,7 @@ public class DefaultDispatcherResourceManagerComponentFactory implements Dispatc
 
 			final String hostname = RpcUtils.getHostname(rpcService);
 
+			//构造ResouceManager
 			resourceManager = resourceManagerFactory.createResourceManager(
 				configuration,
 				ResourceID.generate(),

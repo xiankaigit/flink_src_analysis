@@ -57,6 +57,7 @@ public class StandaloneSessionClusterEntrypoint extends SessionClusterEntrypoint
 		});
 		LOG.info("------------------ {} show env end------------------",simpleName);
 		// startup checks and logging
+		//提供对JVM执行环境的访问的实用程序类（如执行用户）打印配置信息等
 		EnvironmentInformation.logEnvironmentInfo(LOG, StandaloneSessionClusterEntrypoint.class.getSimpleName(), args);
 		SignalHandler.register(LOG);
 		JvmShutdownSafeguard.installAsShutdownHook(LOG);
@@ -65,10 +66,11 @@ public class StandaloneSessionClusterEntrypoint extends SessionClusterEntrypoint
 			args,
 			new EntrypointClusterConfigurationParserFactory(),
 			StandaloneSessionClusterEntrypoint.class);
+		//解析配置参数
 		Configuration configuration = loadConfiguration(entrypointClusterConfiguration);
-
+		//构造StandaloneSessionClusterEntrypoint,用于启动standalone模式的JM
 		StandaloneSessionClusterEntrypoint entrypoint = new StandaloneSessionClusterEntrypoint(configuration);
-
+		//启动集群
 		ClusterEntrypoint.runClusterEntrypoint(entrypoint);
 	}
 }
