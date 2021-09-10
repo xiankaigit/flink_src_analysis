@@ -140,23 +140,27 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 			Hardware.getNumberCPUCores(),
 			new ExecutorThreadFactory("taskmanager-future"));
 
+		//创建HA服务,standlone模式对应的是StandaloneHaServices，其实这个是假的高可用,不会实质的参与JM高可用
 		highAvailabilityServices = HighAvailabilityServicesUtils.createHighAvailabilityServices(
 			configuration,
 			executor,
 			HighAvailabilityServicesUtils.AddressResolution.NO_ADDRESS_RESOLUTION);
 
+		//启动一个JmxServer, 用于metric
 		JMXService.startInstance(configuration.getString(JMXServerOptions.JMX_SERVER_PORT));
-
+	 	//给予akka实现的Rpc服务，用于Flink进程间通信，注意不用于task的上下游的数据交换
 		rpcService = createRpcService(configuration, highAvailabilityServices);
 
 		this.resourceId = getTaskManagerResourceID(configuration, rpcService.getAddress(), rpcService.getPort());
-
+		//用于心跳检测的服务
 		HeartbeatServices heartbeatServices = HeartbeatServices.fromConfiguration(configuration);
 
+		// 创建监控指标注册服务
+		// 用于记录所有的metrics，连接MetricGroup和MetricReporter
 		metricRegistry = new MetricRegistryImpl(
 			MetricRegistryConfiguration.fromConfiguration(configuration),
 			ReporterSetup.fromConfiguration(configuration, pluginManager));
-
+         //开启metrics查询服务
 		final RpcService metricQueryServiceRpcService = MetricUtils.startRemoteMetricsRpcService(configuration, rpcService.getAddress());
 		metricRegistry.startQueryService(metricQueryServiceRpcService, resourceId);
 
@@ -320,6 +324,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 		// startup checks and logging
 		EnvironmentInformation.logEnvironmentInfo(LOG, "TaskManager", args);
 		SignalHandler.register(LOG);
+		//设置JVM关闭前的回调
 		JvmShutdownSafeguard.installAsShutdownHook(LOG);
 
 		long maxOpenFileHandles = EnvironmentInformation.getOpenFileHandlesLimit();
@@ -338,13 +343,16 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 	}
 
 	public static void runTaskManager(Configuration configuration, PluginManager pluginManager) throws Exception {
+		//准备工作结束，正式启动tm
+		//step1: 创建一个TaskManagerRunner
 		final TaskManagerRunner taskManagerRunner = new TaskManagerRunner(configuration, pluginManager, TaskManagerRunner::createTaskExecutorService);
-
+        //step2: 启动tm,这里其实就是taskManagerRunner的start中逐层的往里调用最终到了；额，其实就是启动相关RPC的服务网
 		taskManagerRunner.start();
 	}
 
 	public static void runTaskManagerSecurely(String[] args) {
 		try {
+			//解析flink配置文件和命令行传入的参数，构造config
 			Configuration configuration = loadConfiguration(args);
 			runTaskManagerSecurely(configuration);
 		} catch (Throwable t) {
@@ -356,7 +364,9 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 
 	public static void runTaskManagerSecurely(Configuration configuration) throws Exception {
 		replaceGracefulExitWithHaltIfConfigured(configuration);
+		//加载flink安装路径下面的plugins目录下的jar包，创建插件管理器,这些插件是单独的类加载器加载的
 		final PluginManager pluginManager = PluginUtils.createPluginManagerFromRootFolder(configuration);
+		// 初始化共享文件系统配置(FileSystemFactory)，比如HDFS
 		FileSystem.initialize(configuration, pluginManager);
 
 		SecurityUtils.install(new SecurityConfiguration(configuration));
@@ -419,6 +429,7 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 
 		String externalAddress = rpcService.getAddress();
 
+		//tm资源信息，例如cpu核数，堆内存，堆外内存，用于网络通信的内存，managedmemory
 		final TaskExecutorResourceSpec taskExecutorResourceSpec = TaskExecutorResourceUtils.resourceSpecFromConfig(configuration);
 
 		TaskManagerServicesConfiguration taskManagerServicesConfiguration =
@@ -428,17 +439,19 @@ public class TaskManagerRunner implements FatalErrorHandler, AutoCloseableAsync 
 				externalAddress,
 				localCommunicationOnly,
 				taskExecutorResourceSpec);
-
+		// 创建task manager的MetricGroup
 		Tuple2<TaskManagerMetricGroup, MetricGroup> taskManagerMetricGroup = MetricUtils.instantiateTaskManagerMetricGroup(
 			metricRegistry,
 			externalAddress,
 			resourceID,
 			taskManagerServicesConfiguration.getSystemResourceMetricsProbingInterval());
 
+		// 创建用于IO任务的线程池
 		final ExecutorService ioExecutor = Executors.newFixedThreadPool(
 			taskManagerServicesConfiguration.getNumIoThreads(),
 			new ExecutorThreadFactory("flink-taskexecutor-io"));
 
+		// 创建Task Manager服务，具体看里面的注释，非常重要
 		TaskManagerServices taskManagerServices = TaskManagerServices.fromConfiguration(
 			taskManagerServicesConfiguration,
 			blobCacheService.getPermanentBlobService(),

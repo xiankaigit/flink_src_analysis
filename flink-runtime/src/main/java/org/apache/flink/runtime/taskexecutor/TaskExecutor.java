@@ -372,14 +372,19 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 	private void startTaskExecutorServices() throws Exception {
 		try {
 			// start by connecting to the ResourceManager
+			// 启动leader变更监听服务，如果leader变更会通知ResourceManagerLeaderListener
 			resourceManagerLeaderRetriever.start(new ResourceManagerLeaderListener());
 
 			// tell the task slot table who's responsible for the task slot actions
+			// 启动task slot table，参数的SlotAction负责定义释放slot（freeSlot）和slot超时（timeoutSlot）
 			taskSlotTable.start(new SlotActionsImpl(), getMainThreadExecutor());
 
 			// start the job leader service
+			// 启动job leader服务
+			// 管理某个job的task manager是这个job的job leader
+			// job manager如果有变更，会通知JobLeaderListenerImpl
 			jobLeaderService.start(getAddress(), getRpcService(), haServices, new JobLeaderListenerImpl());
-
+			// 创建文件缓存
 			fileCache = new FileCache(taskManagerConfiguration.getTmpDirectories(), blobCacheService.getPermanentBlobService());
 		} catch (Exception e) {
 			handleStartTaskExecutorServicesException(e);
