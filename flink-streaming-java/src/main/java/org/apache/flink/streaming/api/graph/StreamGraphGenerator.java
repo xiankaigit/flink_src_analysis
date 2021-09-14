@@ -256,6 +256,7 @@ public class StreamGraphGenerator {
 
 		alreadyTransformed = new HashMap<>();
 
+		//遍历TransformationTree，讲transformation转换成Operation和Edge,并添加到构造streamGraph
 		for (Transformation<?> transformation: transformations) {
 			transform(transformation);
 		}
@@ -361,6 +362,7 @@ public class StreamGraphGenerator {
 	 * delegates to one of the transformation specific methods.
 	 */
 	private Collection<Integer> transform(Transformation<?> transform) {
+		//判断是否已经转换过该Transformation是否已经转换过
 		if (alreadyTransformed.containsKey(transform)) {
 			return alreadyTransformed.get(transform);
 		}
@@ -371,6 +373,7 @@ public class StreamGraphGenerator {
 
 			// if the max parallelism hasn't been set, then first use the job wide max parallelism
 			// from the ExecutionConfig.
+			//如果算子没有设置max parallelism, 则使用全局的max parallelism ，这个max parallelism 和parallelism是两个概念，和算子并行度的rescale有关系
 			int globalMaxParallelismFromConfig = executionConfig.getMaxParallelism();
 			if (globalMaxParallelismFromConfig > 0) {
 				transform.setMaxParallelism(globalMaxParallelismFromConfig);
@@ -381,11 +384,15 @@ public class StreamGraphGenerator {
 		transform.getOutputType();
 
 		@SuppressWarnings("unchecked")
+		//根据transformation的不同类型获取不同的TransformationTranslator
+		//这里是和老的版本不一样的地方，进行了一些代码结构上的优化：
+		//老的版本是通过if-else进行判断然后执行不同的转换，这里是通过多态的方式避免了过多的if-else,点赞
 		final TransformationTranslator<?, Transformation<?>> translator =
 				(TransformationTranslator<?, Transformation<?>>) translatorMap.get(transform.getClass());
 
 		Collection<Integer> transformedIds;
 		if (translator != null) {
+			//这里会最终到translator中进行edge和streamNode的构造，并添加到StreamGraph中
 			transformedIds = translate(translator, transform);
 		} else {
 			transformedIds = legacyTransform(transform);
@@ -393,6 +400,7 @@ public class StreamGraphGenerator {
 
 		// need this check because the iterate transformation adds itself before
 		// transforming the feedback edges
+		//记录已经转换的transformation
 		if (!alreadyTransformed.containsKey(transform)) {
 			alreadyTransformed.put(transform, transformedIds);
 		}
@@ -608,6 +616,7 @@ public class StreamGraphGenerator {
 		checkNotNull(translator);
 		checkNotNull(transform);
 
+		//获取当前transformation的父节点,则进行获取父节点时，会进行递归进行判断
 		final List<Collection<Integer>> allInputIds = getParentInputIds(transform.getInputs());
 
 		// the recursive call might have already transformed this
@@ -623,7 +632,7 @@ public class StreamGraphGenerator {
 
 		final TransformationTranslator.Context context = new ContextImpl(
 				this, streamGraph, slotSharingGroup, configuration);
-
+		//对当前节点进行转换成StreamNode和Edge,并添加到StreamGraph
 		return shouldExecuteInBatchMode
 				? translator.translateForBatch(transform, context)
 				: translator.translateForStreaming(transform, context);

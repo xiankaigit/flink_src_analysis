@@ -658,6 +658,8 @@ public class DataStream<T> {
 	 * @return The transformed {@link DataStream}.
 	 */
 	public <R> SingleOutputStreamOperator<R> flatMap(FlatMapFunction<T, R> flatMapper, TypeInformation<R> outputType) {
+		//step1:构造 StreamOperator
+		//new StreamFlatMap<>(clean(flatMapper));
 		return transform("Flat Map", outputType, new StreamFlatMap<>(clean(flatMapper)));
 
 	}
@@ -1252,7 +1254,7 @@ public class DataStream<T> {
 
 		// read the output type of the input Transform to coax out errors about MissingTypeInfo
 		transformation.getOutputType();
-
+		//step2: 构造Transformation
 		OneInputTransformation<T, R> resultTransform = new OneInputTransformation<>(
 				this.transformation,
 				operatorName,
@@ -1260,9 +1262,14 @@ public class DataStream<T> {
 				outTypeInfo,
 				environment.getParallelism());
 
+		//这个地方我要特殊说明一下跑【吐槽】：
+		//下面这个地方是构造一个新的DataStream,也就是我们在DataStream上调用各种方法（如FlatMap）等返回给你的新的DataStream
+		//但是我们可以看到下面的这个返回值类型个叫SingleOutputStreamOperator，通过看他的继承关系，可以看到这个确实是DataStream的子类；
+		//但是看名字是以StreamOperator,貌似是我们在step1（661行）中讲用户调用算子传入的function包装成的StreamOperator的对象或子类的对象，但并不是。
+		//SingleOutputStreamOperator不是StreamOperator的子类，而是一个DataStream的子类，所以我感觉这里SingleOutputStreamOperator的名字改为叫SingleOutputStream更合理一点
 		@SuppressWarnings({"unchecked", "rawtypes"})
 		SingleOutputStreamOperator<R> returnStream = new SingleOutputStreamOperator(environment, resultTransform);
-
+		//step3 构造TransformationTree, 后面会用其构造StreamGraph
 		getExecutionEnvironment().addOperator(resultTransform);
 
 		return returnStream;

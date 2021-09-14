@@ -66,6 +66,7 @@ public class LegacySourceTransformationTranslator<OUT>
 		final int transformationId = transformation.getId();
 		final ExecutionConfig executionConfig = streamGraph.getExecutionConfig();
 
+		//构造StreamNode,并添加到StreamGraph中:StreamGraph的成员变量（map,vertexID->streamNode）
 		streamGraph.addLegacySource(
 				transformationId,
 				slotSharingGroup,

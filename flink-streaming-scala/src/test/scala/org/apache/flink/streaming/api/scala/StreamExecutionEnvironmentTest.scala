@@ -36,39 +36,39 @@ import scala.collection.JavaConversions._
  */
 class StreamExecutionEnvironmentTest {
 
-  /**
-   * Verifies that calls to fromSource() don't throw and create a stream of the expected type.
-   */
-  @Test
-  def testFromSource(): Unit = {
-    implicit val typeInfo: TypeInformation[Integer] = new MockTypeInfo()
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-
-    val stream = env.fromSource(
-      new MockSource(Boundedness.CONTINUOUS_UNBOUNDED, 1),
-      WatermarkStrategy.noWatermarks(),
-      "test source")
-
-    assertEquals(typeInfo, stream.dataType)
-  }
-
-  /**
-   * Verifies that calls to fromSequence() instantiate a new DataStream
-   * that contains a sequence of numbers.
-   */
-  @Test
-  def testFromSequence(): Unit = {
-    val typeInfo = implicitly[TypeInformation[Long]]
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-
-    val stream = env.fromSequence(1, 100)
-
-    assertEquals(typeInfo, stream.dataType)
-  }
-
-  // --------------------------------------------------------------------------
-  //  mocks
-  // --------------------------------------------------------------------------
-
-  private class MockTypeInfo extends GenericTypeInfo[Integer](classOf[Integer]) {}
+//  /**
+//   * Verifies that calls to fromSource() don't throw and create a stream of the expected type.
+//   */
+//  @Test
+//  def testFromSource(): Unit = {
+//    implicit val typeInfo: TypeInformation[Integer] = new MockTypeInfo()
+//    val env = StreamExecutionEnvironment.getExecutionEnvironment
+//
+//    val stream = env.fromSource(
+//      new MockSource(Boundedness.CONTINUOUS_UNBOUNDED, 1),
+//      WatermarkStrategy.noWatermarks(),
+//      "test source")
+//
+//    assertEquals(typeInfo, stream.dataType)
+//  }
+//
+//  /**
+//   * Verifies that calls to fromSequence() instantiate a new DataStream
+//   * that contains a sequence of numbers.
+//   */
+//  @Test
+//  def testFromSequence(): Unit = {
+//    val typeInfo = implicitly[TypeInformation[Long]]
+//    val env = StreamExecutionEnvironment.getExecutionEnvironment
+//
+//    val stream = env.fromSequence(1, 100)
+//
+//    assertEquals(typeInfo, stream.dataType)
+//  }
+//
+//  // --------------------------------------------------------------------------
+//  //  mocks
+//  // --------------------------------------------------------------------------
+//
+//  private class MockTypeInfo extends GenericTypeInfo[Integer](classOf[Integer]) {}
 }

@@ -55,7 +55,9 @@ public class WordCount {
 		final MultipleParameterTool params = MultipleParameterTool.fromArgs(args);
 
 		// set up the execution environment
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		//final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		final StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment("localhost",8081);
+
 
 		// make parameters available in the web interface
 		env.getConfig().setGlobalJobParameters(params);
