@@ -91,8 +91,12 @@ Flink 中的执行图可以分成四层
     Flink的开发人员估计有别的考虑，所以才这么命名的，目前我没有看懂为什么这么命名，对于我这样一个对代码洁癖的人来说，看的真心难受，个人的一点点想法，可能想的不周勿喷～
 
 ###4.2.2 构造SteamGraph
-执行env.execute()的时候，env内部会将上一步构造的TransformationTree作为参数调用StreamGraphGenerator的generate方法构造StreamGraph
-StreamGraphGenerator的generate方法便利TransformationTree，对没一个恩Transformation转换为StreamNode和Edge加到StreamGraph上
+执行env.execute()的时候，env内部会将上一步构造的TransformationTree作为参数调用StreamGraphGenerator的generate方法构造StreamGraph  
+StreamGraphGenerator的generate方法便利TransformationTree，对每一个Transformation转换为StreamNode和Edge加到StreamGraph上，转换逻辑如下：  
+step1: 将当前的Transformation构造成StreamNode添加到StreamGraph上  
+step2: 将当前的Transformation和它的每一个父节点构造成Edge添加到StreamGraph上.  
+注意：Edge是当前Transformation和父Transformation之间的链接，所以在处理当前节点的时候，其全部父Transformation都必须赢转换完毕，因此在对当前的Transformation进行转换
+之前会判断每一父Transformation是否已经转换，如果没有先转换父节点，相当于递归了。
 ##4.3 构造JobGraph
 step1:构造散列值：为了重启时算子id不变，可以进行failedover  
 step2:设置执行链  
