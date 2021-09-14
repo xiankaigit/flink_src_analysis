@@ -96,7 +96,12 @@ StreamGraphGenerator的generate方法便利TransformationTree，对每一个Tran
 step1: 将当前的Transformation构造成StreamNode添加到StreamGraph上  
 step2: 将当前的Transformation和它的每一个父节点构造成Edge添加到StreamGraph上.  
 注意：Edge是当前Transformation和父Transformation之间的链接，所以在处理当前节点的时候，其全部父Transformation都必须赢转换完毕，因此在对当前的Transformation进行转换
-之前会判断每一父Transformation是否已经转换，如果没有先转换父节点，相当于递归了。
+之前会判断每一父Transformation是否已经转换，如果没有先转换父节点，相当于递归了。  
+备注：上面吐槽了一下，现在可以点赞一波了：对比老的StreamGraph生成逻辑中，我发现还有一点代码结构上的优化，例如针对不同的Transformation进行转化生成StreamNode和Edge的时候，  
+新老版本的Flink都根据Transformation的类型不同有不同的处理，但是新版本的显然更优雅：
+老的版本直接就是 通过if else if else if .....else,10多个分之的判断，在当年看老版本代码的时候，我就吐槽过并且有自己优化的想法，结果新的版本和我想法是一致的
+新的版本是通过多态来解决的（这个也是我们解决if-else多分支问题的常用方法，高性能java书中有说过），讲转换逻辑封根据Transformation封装成不同的TransformationTranslator,并将能够处理的Transformation类型（Class）作为key，TransformationTranslator,作为value放到map中，  
+转换具体的Transformation时，讲要转换的Transformation作为key去这个map中去寻找能够转换的TransformationTranslator,然后处理，很优雅的解决了if-else丑陋问题。
 ##4.3 构造JobGraph
 step1:构造散列值：为了重启时算子id不变，可以进行failedover  
 step2:设置执行链  
