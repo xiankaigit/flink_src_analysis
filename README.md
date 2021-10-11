@@ -95,17 +95,27 @@ Flink 中的执行图可以分成四层
 StreamGraphGenerator的generate方法便利TransformationTree，对每一个Transformation转换为StreamNode和Edge加到StreamGraph上，转换逻辑如下：  
 step1: 将当前的Transformation构造成StreamNode添加到StreamGraph上  
 step2: 将当前的Transformation和它的每一个父节点构造成Edge添加到StreamGraph上.  
-注意：Edge是当前Transformation和父Transformation之间的链接，所以在处理当前节点的时候，其全部父Transformation都必须赢转换完毕，因此在对当前的Transformation进行转换
+注意：Edge是当前Transformation和父Transformation之间的链接，所以在处理当前节点的时候，其全部父Transformation都必须转换完毕，因此在对当前的Transformation进行转换
 之前会判断每一父Transformation是否已经转换，如果没有先转换父节点，相当于递归了。  
-备注：上面吐槽了一下，现在可以点赞一波了：对比老的StreamGraph生成逻辑中，我发现还有一点代码结构上的优化，例如针对不同的Transformation进行转化生成StreamNode和Edge的时候，  
-新老版本的Flink都根据Transformation的类型不同有不同的处理，但是新版本的显然更优雅：
-老的版本直接就是 通过if else if else if .....else,10多个分之的判断，在当年看老版本代码的时候，我就吐槽过并且有自己优化的想法，结果新的版本和我想法是一致的
-新的版本是通过多态来解决的（这个也是我们解决if-else多分支问题的常用方法，高性能java书中有说过），讲转换逻辑封根据Transformation封装成不同的TransformationTranslator,并将能够处理的Transformation类型（Class）作为key，TransformationTranslator,作为value放到map中，  
-转换具体的Transformation时，讲要转换的Transformation作为key去这个map中去寻找能够转换的TransformationTranslator,然后处理，很优雅的解决了if-else丑陋问题。
+
+    备注：上面吐槽了一下，现在可以点赞一波了：对比老的StreamGraph生成逻辑中，我发现还有一点代码结构上的优化，例如针对不同的Transformation进行转化生成StreamNode和Edge的时候，  
+    新老版本的Flink都根据Transformation的类型不同有不同的处理，但是新版本的显然更优雅：
+    老的版本直接就是 通过if else if else if .....else,10多个分之的判断，在当年看老版本代码的时候，我就吐槽过并且有自己优化的想法，结果新的版本和我想法是一致的
+    新的版本是通过多态来解决的（这个也是我们解决if-else多分支问题的常用方法，高性能java书中有说过），讲转换逻辑封根据Transformation封装成不同的TransformationTranslator,并将能够处理的Transformation类型（Class）作为key，TransformationTranslator,作为value放到map中，  
+    转换具体的Transformation时，讲要转换的Transformation作为key去这个map中去寻找能够转换的TransformationTranslator,然后处理，很优雅的解决了if-else丑陋问题。
 ##4.3 构造JobGraph
-step1:构造散列值：为了重启时算子id不变，可以进行failedover  
-step2:设置执行链  
-step3:设置SlotSharingGroup, checkpoint等信息  
+
+step1 构造散列值:并为每个SteamNode生成散列值，应用的算法那可以保证如果提交的拓扑没有改变，则每次生成的散列值都是一样的，一个StreamNode的ID对应一个散列值(广度优先算法)  
+step2 构造hash值  
+step3 设置chain(重要,具体逻辑看这一步内部的具体代码注释)  
+step4 将每个JobVertex的入边集合也序列化到该JobVertex的StreamConfig中（出边集合已经在上一步的时候写入了）  
+step5 据group name，为每个 JobVertex 指定所属的 SlotSharingGroup,以及针对 Iteration的头尾设置  CoLocationGroup  
+step6 配置内存相关的参数(权重比)  
+step7 配置checkpoint  
+step8 设置SavePoint相关参数  
+step9 添加用户分布式缓存  
+step10 设置 job execution 配置  
+
 ##4.4 构造ExecutionGraph
 step1:准备工作：进行用于类加载器的获取，重启策略的设置；  
 step2:通过JobVertex构造ExeJobVertex;  

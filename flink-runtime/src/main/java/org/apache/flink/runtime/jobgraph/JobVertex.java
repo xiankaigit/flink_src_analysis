@@ -474,10 +474,15 @@ public class JobVertex implements java.io.Serializable {
 			JobVertex input,
 			DistributionPattern distPattern,
 			ResultPartitionType partitionType) {
-
+		// 由上游节点 创建一个IntermediateDataSet
+		// 中间数据集是操作符 - sour操作或任何中间操作 - 产生的数据集
+		//  中间数据集可能被其他操作符读取、具体化或丢弃。
 		IntermediateDataSet dataSet = input.createAndAddResultDataSet(partitionType);
-
+		// 由此可以看出, 他的输入就是上游节点的一个输出
+		// JobEdge的输入就是当前节点
+		// 构建一个jobEdge
 		JobEdge edge = new JobEdge(dataSet, this, distPattern);
+		// jobEdge 连接edge
 		this.inputs.add(edge);
 		dataSet.addConsumer(edge);
 		return edge;
