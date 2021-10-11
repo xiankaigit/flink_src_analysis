@@ -62,17 +62,17 @@ step4: 启动tm,这里其实就是taskManagerRunner的start中逐层的往里调
     step4.1 启动leader变更监听服务  
     step4.2 启动taskslottable  
     step4.3 启动job leader服务
-#4 任务提交流程 
-##4.1 基本概念与流程
+# 4 任务提交流程 
+## 4.1 基本概念与流程
 Flink 中的执行图可以分成四层
 * StreamGraph：根据用户通过 Stream API 编写的代码生成的最初的图.用来表示程序拓扑结构。  
 * JobGraph：StreamGraph经过优化后生成了 JobGraph，提交给 JobManager 的数据结构。.主要的优化为，将多个符合条件的节点 chain 在一起作为一个节点，这样可以减少数据在节点之间流动所需要的序列化/反序列化/传输消耗。
 * ExecutionGraph：JobManager 根据 JobGraph 生成的分布式执行图，是调度层最核心的数据结构.
 * 物理执行图：JobManager 根据 ExecutionGraph 对 Job 进行调度后，在各个TaskManager 上部署 Task 后形成的“图”，并不是一个具体的数据结构.
 四张图
-##4.2 构造StreamGraph
+## 4.2 构造StreamGraph
 注意： 这一过程是在client端进行的
-###4.2.1 构造构造TransformationTree
+### 4.2.1 构造构造TransformationTree
 我们在编写Flink任务事，会调用DataStream中的各种方法，如map,flatmap,filter，调用这些方法时，会传入对应自定义的Function(如MapFuntion，FlatMapFunction)，在map,flatmap,filter的内部会对Function
 进行一系列的包装(代码中我以flatmap为例进行了分析并添加了注释):
 1）将Function包装成StreamOperator,例如讲FlatMapFunction包装成StreamFlatMap  
@@ -90,7 +90,7 @@ Flink 中的执行图可以分成四层
     此外，我们在构造完Transformation，会讲Transformation加入到env的成员变量中（list）,会调用env的一个方法，这个方法的名字叫做addOperator,名字虽然叫addOperator，但参数却是tranformation类型的   
     Flink的开发人员估计有别的考虑，所以才这么命名的，目前我没有看懂为什么这么命名，对于我这样一个对代码洁癖的人来说，看的真心难受，个人的一点点想法，可能想的不周勿喷～
 
-###4.2.2 构造SteamGraph
+### 4.2.2 构造SteamGraph
 执行env.execute()的时候，env内部会将上一步构造的TransformationTree作为参数调用StreamGraphGenerator的generate方法构造StreamGraph  
 StreamGraphGenerator的generate方法便利TransformationTree，对每一个Transformation转换为StreamNode和Edge加到StreamGraph上，转换逻辑如下：  
 step1: 将当前的Transformation构造成StreamNode添加到StreamGraph上  
@@ -103,7 +103,7 @@ step2: 将当前的Transformation和它的每一个父节点构造成Edge添加�
     老的版本直接就是 通过if else if else if .....else,10多个分之的判断，在当年看老版本代码的时候，我就吐槽过并且有自己优化的想法，结果新的版本和我想法是一致的
     新的版本是通过多态来解决的（这个也是我们解决if-else多分支问题的常用方法，高性能java书中有说过），讲转换逻辑封根据Transformation封装成不同的TransformationTranslator,并将能够处理的Transformation类型（Class）作为key，TransformationTranslator,作为value放到map中，  
     转换具体的Transformation时，讲要转换的Transformation作为key去这个map中去寻找能够转换的TransformationTranslator,然后处理，很优雅的解决了if-else丑陋问题。
-##4.3 构造JobGraph
+## 4.3 构造JobGraph
 
 step1 构造散列值:并为每个SteamNode生成散列值，应用的算法那可以保证如果提交的拓扑没有改变，则每次生成的散列值都是一样的，一个StreamNode的ID对应一个散列值(广度优先算法)  
 step2 构造hash值  
@@ -116,7 +116,7 @@ step8 设置SavePoint相关参数
 step9 添加用户分布式缓存  
 step10 设置 job execution 配置  
 
-##4.4 构造ExecutionGraph
+## 4.4 构造ExecutionGraph
 step1:准备工作：进行用于类加载器的获取，重启策略的设置；  
 step2:通过JobVertex构造ExeJobVertex;  
 step3:设置监听器，监听后面的运行；  
