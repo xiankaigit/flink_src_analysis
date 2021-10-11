@@ -74,7 +74,7 @@ Flink 中的执行图可以分成四层
 注意： 这一过程是在client端进行的
 ### 4.2.1 构造构造TransformationTree
 我们在编写Flink任务事，会调用DataStream中的各种方法，如map,flatmap,filter，调用这些方法时，会传入对应自定义的Function(如MapFuntion，FlatMapFunction)，在map,flatmap,filter的内部会对Function
-进行一系列的包装(代码中我以flatmap为例进行了分析并添加了注释):
+进行一系列的包装(代码中我以flatmap为例进行了分析并添加了注释):  
 1）将Function包装成StreamOperator,例如讲FlatMapFunction包装成StreamFlatMap  
 2)讲StreamOperator包装成Transformation，例如讲转换成OneInputTransformation
 3)这个Transformation会加入到env的一个成员变量中（list类型）构成TransformationTree 
